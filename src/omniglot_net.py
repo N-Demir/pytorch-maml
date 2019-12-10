@@ -118,7 +118,7 @@ class OmniglotNet(nn.Module):
                 ('relu3', nn.ReLU(inplace=True)),
                 ('pool3', nn.MaxPool2d(2,2))
         ]))
-        self.add_module('fc', nn.Linear(64, num_classes))
+        self.add_module('fc', nn.Linear(64, num_classes + 1))
         
         # Define loss function
         self.loss_fn = loss_fn
