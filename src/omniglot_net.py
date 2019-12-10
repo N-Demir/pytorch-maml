@@ -8,6 +8,94 @@ import torch.nn as nn
 
 from layers import *
 
+
+class ConditionalGenerator(nn.Module):
+    def __init__(self, num_classes, latent_dim, im_shape, loss_fn):
+        super(OmniglotNet, self).__init__()
+        self.im_shape = im_shape
+
+        # Define the network following this architecture:
+        # https://github.com/eriklindernoren/PyTorch-GAN/blob/master/implementations/cgan/cgan.py
+        self.operations = nn.Sequential(OrderedDict([
+                ('linear1', nn.Linear(num_classes + latent_dim, 128)),
+                ('leakyrelu1', nn.LeakyReLU(0.2, inplace=True)),
+                ('linear2', nn.Linear(128, 256)),
+                ('1dbn2', nn.BatchNorm1d(256, 0.8)),
+                ('leakyrelu2', nn.LeakyReLU(0.2, inplace=True)),
+                ('linear3', nn.Linear(256, 512)),
+                ('1dbn3', nn.BatchNorm1d(512, 0.8)),
+                ('leakyrelu3', nn.LeakyReLU(0.2, inplace=True)),
+                ('linear4', nn.Linear(512, 1024)),
+                ('1dbn4', nn.BatchNorm1d(1024, 0.8)),
+                ('leakyrelu4', nn.LeakyReLU(0.2, inplace=True)),
+                ('linear5', nn.Linear(1024, int(np.prod(self.img_shape)))),
+                ('1dbn5', nn.BatchNorm1d(int(np.prod(self.img_shape)), 0.8)),
+                ('leakyrelu5', nn.LeakyReLU(0.2, inplace=True)),
+                ('tanh', nn.Tanh()), # TODO: Should this be something else?
+        ]))
+        
+        # Define loss function
+        self.loss_fn = loss_fn
+
+        # Initialize weights
+        self._init_weights()
+
+    def forward(self, label, noise, weights=None):
+        out = torch.cat((label, noise), -1)
+        if weights == None:
+            out = self.operations(out)
+        else:
+            out = linear(out, weights['linear1.weight'], weights['linear1.bias'])
+            out = leakyrelu(out, slope=0.2, inplace=True)
+            out = linear(out, weights['linear2.weight'], weights['linear2.bias'])
+            out = batchnorm(out, weights['1dbn2.weight'], weights['1dbn2.bias'], momentum=0.8)
+            out = leakyrelu(out, slope=0.2, inplace=True)
+            out = linear(out, weights['linear3.weight'], weights['linear3.bias'])
+            out = batchnorm(out, weights['1dbn3.weight'], weights['1dbn3.bias'], momentum=0.8)
+            out = leakyrelu(out, slope=0.2, inplace=True)
+            out = linear(out, weights['linear4.weight'], weights['linear4.bias'])
+            out = batchnorm(out, weights['1dbn4.weight'], weights['1dbn4.bias'], momentum=0.8)
+            out = leakyrelu(out, slope=0.2, inplace=True)
+            out = linear(out, weights['linear5.weight'], weights['linear5.bias'])
+            out = batchnorm(out, weights['1dbn5.weight'], weights['1dbn5.bias'], momentum=0.8)
+            out = leakyrelu(out, slope=0.2, inplace=True)
+            out = nn.Tanh()(out)
+
+        out = out.view(out.size[0], *self.im_shape)
+        return out
+
+    def net_forward(self, label, noise, weights=None):
+        return self.forward(label, noise, weights)
+    
+    def _init_weights(self):
+        ''' Set weights to Gaussian, biases to zero '''
+        torch.manual_seed(1337)
+        torch.cuda.manual_seed(1337)
+        torch.cuda.manual_seed_all(1337)
+        print('init weights')
+        for m in self.modules():
+            elif isinstance(m, nn.BatchNorm1d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.Linear):
+                n = m.weight.size(1)
+                m.weight.data.normal_(0, 0.01)
+                #m.bias.data.zero_() + 1
+                m.bias.data = torch.ones(m.bias.data.size())
+    
+    def copy_weights(self, net):
+        ''' Set this module's weights to be the same as those of 'net' '''
+        # TODO: breaks if nets are not identical
+        # TODO: won't copy buffers, e.g. for batch norm
+        for m_from, m_to in zip(net.modules(), self.modules()):
+            if isinstance(m_to, nn.Linear) or isinstance(m_to, nn.BatchNorm1d):
+                m_to.weight.data = m_from.weight.data.clone()
+                if m_to.bias is not None:
+                    m_to.bias.data = m_from.bias.data.clone()
+
+
+
+
 class OmniglotNet(nn.Module):
     '''
     The base model for few-shot learning on Omniglot

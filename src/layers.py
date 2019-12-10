@@ -37,3 +37,6 @@ def bilinear_upsample(in_, factor):
 
 def log_softmax(input):
     return F.log_softmax(input)
+
+def leakyrelu(in_, negative_slope=0.2, inplace=True):
+    return F.leaky_relu(in_, negative_slope=negative_slope, inplace=inplace)

@@ -21,10 +21,6 @@ def forward_pass(net, in_, target, weights=None):
     input_var = Variable(in_).cuda(async=True)
     target_var = Variable(target).cuda(async=True)
 
-    """
-
-    """
-
     out = net.net_forward(input_var, weights)
     loss = net.loss_fn(out, target_var)
     return loss, out
