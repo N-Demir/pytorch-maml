@@ -35,14 +35,14 @@ class InnerLoop(OmniglotNet):
     def net_forward(self, x, weights=None):
         return super(InnerLoop, self).forward(x, weights)
 
-    def forward_pass(self, in_, target, weights=None):
-        ''' Run data through net, return loss and output '''
-        input_var = torch.autograd.Variable(in_).cuda(async=True)
-        target_var = torch.autograd.Variable(target).cuda(async=True)
-        # Run the batch through the net, compute loss
-        out = self.net_forward(input_var, weights)
-        loss = self.loss_fn(out, target_var)
-        return loss, out
+    # def forward_pass(self, in_, target, weights=None):
+    #     ''' Run data through net, return loss and output '''
+    #     input_var = torch.autograd.Variable(in_).cuda(async=True)
+    #     target_var = torch.autograd.Variable(target).cuda(async=True)
+    #     # Run the batch through the net, compute loss
+    #     out = self.net_forward(input_var, weights)
+    #     loss = self.loss_fn(out, target_var)
+    #     return loss, out
     
     def forward(self, task):
         train_loader = get_data_loader(task, self.batch_size)
@@ -55,10 +55,10 @@ class InnerLoop(OmniglotNet):
             print('inner step', i)
             in_, target = train_loader.__iter__().next()
             if i==0:
-                loss, _ = self.forward_pass(in_, target)
+                loss, _ = forward_pass(self, in_, target)
                 grads = torch.autograd.grad(loss, self.parameters(), create_graph=True)
             else:
-                loss, _ = self.forward_pass(in_, target, fast_weights)
+                loss, _ = forward_pass(self, in_, target, fast_weights)
                 grads = torch.autograd.grad(loss, fast_weights.values(), create_graph=True)
             fast_weights = OrderedDict((name, param - self.step_size*grad) for ((name, param), grad) in zip(fast_weights.items(), grads))
         ##### Test net after training, should be better than random ####
