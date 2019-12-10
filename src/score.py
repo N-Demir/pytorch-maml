@@ -30,6 +30,7 @@ def evaluate(net, loader, weights=None):
         print("Hey got here")
         print(l)
         print(out)
-        loss += l.cpu().detach().numpy()[0]
+        loss += l.cpu().detach()
+        print(loss)
         num_correct += count_correct(np.argmax(out.data.cpu().numpy(), axis=1), target.numpy())
     return float(loss) / len(loader), float(num_correct) / (len(loader)*batch_size)
