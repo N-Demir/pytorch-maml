@@ -15,10 +15,9 @@ def count_correct(pred, target):
 def forward_pass(net, in_, target, weights=None):
     ''' forward in_ through the net, return loss and output '''
     # print(net)
-    print(type(in_))
-    print(type(target))
-    print(in_)
-    print(target)
+    print(in_.shape)
+    print(target.shape)
+
     input_var = Variable(in_).cuda(async=True)
     target_var = Variable(target).cuda(async=True)
 
