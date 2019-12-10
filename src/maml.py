@@ -19,6 +19,7 @@ from inner_loop import InnerLoop
 from omniglot_net import OmniglotNet
 from score import *
 from data_loading import *
+from tensorboardX import SummaryWriter
 
 
 class MetaLearner(object):
@@ -144,11 +145,20 @@ class MetaLearner(object):
             self.meta_update(task, grads)
             
     def train(self, exp):
+        # For logging
+        writer = SummaryWriter('../output/{}/'.format(exp))
+
         tr_loss, tr_acc, val_loss, val_acc = [], [], [], []
         mtr_loss, mtr_acc, mval_loss, mval_acc = [], [], [], []
         for it in range(self.num_updates):
             # Evaluate on test tasks
             mt_loss, mt_acc, mv_loss, mv_acc = self.test()
+
+            writer.add_scalar('meta_train_loss', mt_loss, it)
+            writer.add_scalar('meta_train_acc', mt_acc, it)
+            writer.add_scalar('meta_val_loss', mv_loss, it)
+            writer.add_scalar('meta_val_acc', mv_acc, it)
+
             mtr_loss.append(mt_loss)
             mtr_acc.append(mt_acc)
             mval_loss.append(mv_loss)
@@ -190,6 +200,8 @@ class MetaLearner(object):
             np.save('../output/{}/meta_tr_acc.npy'.format(exp), np.array(mtr_acc))
             np.save('../output/{}/meta_val_loss.npy'.format(exp), np.array(mval_loss))
             np.save('../output/{}/meta_val_acc.npy'.format(exp), np.array(mval_acc))
+
+        writer.close()
 
 @click.command()
 @click.argument('exp')
