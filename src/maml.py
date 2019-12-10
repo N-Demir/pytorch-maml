@@ -60,11 +60,11 @@ class MetaLearner(object):
         elif 'omniglot' in root:
             return OmniglotTask(root, n_cl, n_inst, split)
         else:
-            print 'Unknown dataset'
+            print('Unknown dataset')
             raise(Exception)
 
     def meta_update(self, task, ls):
-        print '\n Meta update \n'
+        print('\n Meta update \n')
         loader = get_data_loader(task, self.inner_batch_size, split='val')
         in_, target = loader.__iter__().next()
         # We use a dummy forward / backward pass to get the correct grads into self.net
@@ -123,10 +123,10 @@ class MetaLearner(object):
         mval_loss = mval_loss / 10
         mval_acc = mval_acc / 10
 
-        print '-------------------------'
-        print 'Meta train:', mtr_loss, mtr_acc
-        print 'Meta val:', mval_loss, mval_acc
-        print '-------------------------'
+        print('-------------------------')
+        print('Meta train:', mtr_loss, mtr_acc)
+        print('Meta val:', mval_loss, mval_acc)
+        print('-------------------------')
         del test_net
         return mtr_loss, mtr_acc, mval_loss, mval_acc
 
@@ -168,7 +168,7 @@ class MetaLearner(object):
                 vacc += vala
 
             # Perform the meta update
-            print 'Meta update', it
+            print('Meta update', it)
             self.meta_update(task, grads)
 
             # Save a model snapshot every now and then
@@ -211,7 +211,7 @@ def main(exp, dataset, num_cls, num_inst, batch, m_batch, num_updates, num_inner
     frame = inspect.currentframe()
     args, _, _, values = inspect.getargvalues(frame)
     for arg in args:
-        print arg, values[arg]
+        print(arg, values[arg])
 
     # make output dir
     output = '../output/{}'.format(exp)
@@ -220,7 +220,7 @@ def main(exp, dataset, num_cls, num_inst, batch, m_batch, num_updates, num_inner
     except:
         pass
     # Set the gpu
-    print 'Setting GPU to', str(gpu)
+    print('Setting GPU to', str(gpu))
     os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
     loss_fn = CrossEntropyLoss() 
     learner = MetaLearner(dataset, num_cls, num_inst, m_batch, float(meta_lr), batch, float(lr), num_updates, num_inner_updates, loss_fn)

@@ -26,8 +26,8 @@ inner_batch_size = 5
 
 def get_data_loader(task, split='train'):
     dset = Omniglot(task, transform=transforms.ToTensor(), split=split) 
-    print 'img ids', dset.img_ids
-    print 'labels', dset.labels
+    print('img ids', dset.img_ids)
+    print('labels', dset.labels)
     loader = DataLoader(dset, batch_size=inner_batch_size, shuffle=True, num_workers=1, pin_memory=True)
     return loader
 
@@ -66,23 +66,23 @@ def count_correct(pred, target):
 def train_step(task):
     train_loader = get_data_loader(task)
     ##### Test net before training, should be random accuracy ####
-    print 'Before training update', evaluate(net, train_loader)
+    print('Before training update', evaluate(net, train_loader))
     for i in range(10):
         #print 'weight\n', net.weights['fc.weight'].data.cpu().numpy()[:5,:5]
         loss,_ = forward(net, train_loader)
-        print 'Loss', loss.data.cpu().numpy()
+        print('Loss', loss.data.cpu().numpy())
         #print 'Loss', loss.data.cpu().numpy()
         opt.zero_grad()
         loss.backward()
         #print 'grad\n', net.weights['fc.weight'].grad.data.cpu().numpy()[:5,:5]
         opt.step() 
-        print 'Iter ', i, evaluate(net, train_loader)
+        print('Iter ', i, evaluate(net, train_loader))
     ##### Test net after training, should be better than random ####
-    print 'After training update', evaluate(net, train_loader)
+    print('After training update', evaluate(net, train_loader))
 
 # Script
 for i in range(5):
-    print 'Run ', i
+    print('Run ', i)
     net = Classifier(num_classes, batch_norm=True, debug=DEBUG)
     opt = SGD(net.weights.values(), lr=0.001, momentum=0.9, weight_decay=0.0005)
     #opt = Adam(net.weights.values(), lr=1)

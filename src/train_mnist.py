@@ -46,11 +46,11 @@ def train(train_loader, val_loader, net, loss_fn, opt, epoch):
         loss.backward()
         opt.step()
         if i % 10 == 0:
-            print 'Epoch {}, Iteration {} Loss: {}'.format(epoch, i, loss.data.cpu().numpy()[0])
+            print('Epoch {}, Iteration {} Loss: {}'.format(epoch, i, loss.data.cpu().numpy()[0]))
             tl, ta = val(train_loader, net, loss_fn)
             vl, va = val(val_loader, net, loss_fn)
-            print 'Training loss and acc:', tl, ta
-            print 'Validation loss and acc:', vl, va
+            print('Training loss and acc:', tl, ta)
+            print('Validation loss and acc:', vl, va)
             tloss.append(tl)
             tacc.append(ta)
             vloss.append(vl)
