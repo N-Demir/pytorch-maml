@@ -71,7 +71,7 @@ class InnerLoop(OmniglotNet):
         
         # Compute the meta gradient and return it
         in_, target = val_loader.__iter__().next()
-        loss,_ = self.forward_pass(in_, target, fast_weights) 
+        loss,_ = forward_pass(self, in_, target, fast_weights) 
         loss = loss / self.meta_batch_size # normalize loss
         grads = torch.autograd.grad(loss, self.parameters())
         meta_grads = {name:g for ((name, _), g) in zip(self.named_parameters(), grads)}
