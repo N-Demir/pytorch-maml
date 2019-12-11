@@ -22,7 +22,7 @@ def forward_pass(net, in_, target, generator=None, net_weights=None, gen_weights
     target_var = Variable(target).cuda(async=True)
 
     # Real Loss
-    out = net.net_forward(real_input_var, weights)
+    out = net.net_forward(real_input_var, net_weights)
     real_loss = net.loss_fn(out, target_var)
 
     # Fake Loss
