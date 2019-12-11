@@ -11,7 +11,7 @@ from layers import *
 
 class ConditionalGenerator(nn.Module):
     def __init__(self, num_classes, latent_dim, im_shape):
-        super(OmniglotNet, self).__init__()
+        super(ConditionalGenerator, self).__init__()
         self.im_shape = im_shape
         self.latent_dim = latent_dim
         self.num_classes = num_classes
