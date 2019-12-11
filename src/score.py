@@ -39,12 +39,12 @@ def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights
 
         # Get generator loss
         # THIS IS AN UNUSUAL LOSS, mention it
-        gen_loss = net.loss_fn(fake_out, target_var)
+        gen_loss = -net.loss_fn(fake_out, fake_target_var)
         # TODO: Replace with predict any of the k
         # TODO: Comment out fake_loss part for net_loss
         # TODO: Learning rate issues
 
-        return real_loss, gen_loss, out, fake_out
+        return net_loss, gen_loss, out, fake_out
 
     else:
         return real_loss, out
