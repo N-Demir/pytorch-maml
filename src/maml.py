@@ -107,7 +107,7 @@ class MetaLearner(object):
         _, gen_loss, _, gen_out = forward_pass(self.net, in_, target, generator=self.gen)
         gradients = {k: sum(d[k] for d in gen_grads) for k in gen_grads[0].keys()}
         hooks = []
-        for (k,v) in self.generator.named_parameters():
+        for (k,v) in self.gen.named_parameters():
             def get_closure():
                 key = k
                 def replace_grad(grad):
