@@ -44,23 +44,28 @@ class InnerLoop(OmniglotNet):
     #     loss = self.loss_fn(out, target_var)
     #     return loss, out
     
-    def forward(self, task):
+    def forward(self, task, generator):
         train_loader = get_data_loader(task, self.batch_size)
         val_loader = get_data_loader(task, self.batch_size, split='val')
         ##### Test net before training, should be random accuracy ####
         tr_pre_loss, tr_pre_acc = evaluate(self, train_loader)
         val_pre_loss, val_pre_acc = evaluate(self, val_loader)
         fast_weights = OrderedDict((name, param) for (name, param) in self.named_parameters())
+        gen_fast_weights = OrderedDict((name, param) for (name, param) in generator.named_parameters())
         for i in range(self.num_updates):
             print('inner step', i)
             in_, target = train_loader.__iter__().next()
             if i==0:
-                loss, _ = forward_pass(self, in_, target)
-                grads = torch.autograd.grad(loss, self.parameters(), create_graph=True)
+                #TODO: If we want to separate discriminator and generator updates do it here
+                net_loss, gen_loss, _, _ = forward_pass(self, in_, target, generator=generator)
+                net_grads = torch.autograd.grad(net_loss, self.parameters(), create_graph=True)
+                gen_grads = torch.autograd.grad(gen_loss, generator.parameters(), create_graph=True)
             else:
-                loss, _ = forward_pass(self, in_, target, fast_weights)
-                grads = torch.autograd.grad(loss, fast_weights.values(), create_graph=True)
-            fast_weights = OrderedDict((name, param - self.step_size*grad) for ((name, param), grad) in zip(fast_weights.items(), grads))
+                net_loss, gen_loss, _, _ = forward_pass(self, in_, target, generator=generator, net_weights=fast_weights, gen_weights=gen_fast_weights)
+                net_grads = torch.autograd.grad(net_loss, fast_weights.values(), create_graph=True)
+                gen_grads = torch.autograd.grad(gen_loss, gen_fast_weights.values(), create_graph=True)
+            fast_weights = OrderedDict((name, param - self.step_size*grad) for ((name, param), grad) in zip(fast_weights.items(), net_grads))
+            gen_fast_weights = OrderedDict((name, param - self.step_size*grad) for ((name, param), grad) in zip(gen_fast_weights.items(), gen_grads))
         ##### Test net after training, should be better than random ####
         tr_post_loss, tr_post_acc = evaluate(self, train_loader, fast_weights)
         val_post_loss, val_post_acc = evaluate(self, val_loader, fast_weights) 
@@ -71,10 +76,14 @@ class InnerLoop(OmniglotNet):
         
         # Compute the meta gradient and return it
         in_, target = val_loader.__iter__().next()
-        loss,_ = forward_pass(self, in_, target, fast_weights) 
-        loss = loss / self.meta_batch_size # normalize loss
-        grads = torch.autograd.grad(loss, self.parameters())
+        net_loss, gen_loss, _, _ = forward_pass(self, in_, target, generator=generator, net_weights=fast_weights, gen_weights=gen_fast_weights) 
+        net_loss = net_loss / self.meta_batch_size # normalize loss
+        gen_loss = gen_loss / self.meta_batch_size
+        net_grads = torch.autograd.grad(net_loss, self.parameters())
+        gen_grads = torch.autograd.grad(gen_loss, generator.parameters())
+
         meta_grads = {name:g for ((name, _), g) in zip(self.named_parameters(), grads)}
+        gen_meta_grads = {name:g for ((name, _), g) in zip(generator.named_parameters(), gen_grads)}
         metrics = (tr_post_loss, tr_post_acc, val_post_loss, val_post_acc)
-        return metrics, meta_grads
+        return metrics, meta_grads, gen_meta_grads
 

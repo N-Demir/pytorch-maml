@@ -16,7 +16,7 @@ from torch.nn.modules.loss import CrossEntropyLoss
 from task import OmniglotTask, MNISTTask
 from dataset import Omniglot, MNIST
 from inner_loop import InnerLoop
-from omniglot_net import OmniglotNet
+from omniglot_net import OmniglotNet, ConditionalGenerator
 from score import *
 from data_loading import *
 from tensorboardX import SummaryWriter
@@ -46,6 +46,7 @@ class MetaLearner(object):
         self.num_updates = num_updates
         self.num_inner_updates = num_inner_updates
         self.loss_fn = loss_fn
+        self.generator_noise_dim = 10
         
         # Make the nets
         #TODO: don't actually need two nets
@@ -54,7 +55,14 @@ class MetaLearner(object):
         self.net.cuda()
         self.fast_net = InnerLoop(num_classes, self.loss_fn, self.num_inner_updates, self.inner_step_size, self.inner_batch_size, self.meta_batch_size, num_input_channels)
         self.fast_net.cuda()
+
+        self.gen = ConditionalGenerator(num_classes, self.generator_noise_dim, (1, 28, 28))
+        self.gen.cuda()
+        self.fast_gen = ConditionalGenerator(num_classes, self.generator_noise_dim, (1, 28, 28))
+        self.fast_gen.cuda()
+
         self.opt = Adam(self.net.parameters(), lr=meta_step_size)
+        self.gen_opt = Adam(self.gen.parameters(), lr=meta_step_size)
             
     def get_task(self, root, n_cl, n_inst, split='train'):
         if 'mnist' in root:
@@ -65,10 +73,12 @@ class MetaLearner(object):
             print('Unknown dataset')
             raise(Exception)
 
-    def meta_update(self, task, ls):
+    def meta_update(self, task, ls, gen_grads):
+        # TODO: Use gen_grads to also create a meta update for the generator
         print('\n Meta update \n')
         loader = get_data_loader(task, self.inner_batch_size, split='val')
         in_, target = loader.__iter__().next()
+
         # We use a dummy forward / backward pass to get the correct grads into self.net
         loss, out = forward_pass(self.net, in_, target)
         # Unpack the list of grad dicts
@@ -92,7 +102,26 @@ class MetaLearner(object):
         for h in hooks:
             h.remove()
 
+
+        # Repeat the above process but for the generator (LOL)
+        _, gen_loss, _, gen_out = forward_pass(self.net, in_, target, generator=self.gen)
+        gradients = {k: sum(d[k] for d in gen_grads) for k in gen_grads[0].keys()}
+        hooks = []
+        for (k,v) in self.generator.named_parameters():
+            def get_closure():
+                key = k
+                def replace_grad(grad):
+                    return gradients[key]
+                return replace_grad
+            hooks.append(v.register_hook(get_closure()))
+        self.gen_opt.zero_grad()
+        gen_loss.backward()
+        self.gen_opt.step()
+        for h in hooks:
+            h.remove()
+
     def test(self):
+        # TODO: Make test also incorporate the generator
         num_in_channels = 1 if self.dataset == 'mnist' else 3
         test_net = OmniglotNet(self.num_classes, self.loss_fn, num_in_channels)
         mtr_loss, mtr_acc, mval_loss, mval_acc = 0.0, 0.0, 0.0, 0.0
@@ -132,18 +161,18 @@ class MetaLearner(object):
         del test_net
         return mtr_loss, mtr_acc, mval_loss, mval_acc
 
-    def _train(self, exp):
-        ''' debugging function: learn two tasks '''
-        task1 = self.get_task('../data/{}'.format(self.dataset), self.num_classes, self.num_inst)
-        task2 = self.get_task('../data/{}'.format(self.dataset), self.num_classes, self.num_inst)
-        for it in range(self.num_updates):
-            grads = []
-            for task in [task1, task2]:
-                # Make sure fast net always starts with base weights
-                self.fast_net.copy_weights(self.net)
-                _, g = self.fast_net.forward(task)
-                grads.append(g)
-            self.meta_update(task, grads)
+    # def _train(self, exp):
+    #     ''' debugging function: learn two tasks '''
+    #     task1 = self.get_task('../data/{}'.format(self.dataset), self.num_classes, self.num_inst)
+    #     task2 = self.get_task('../data/{}'.format(self.dataset), self.num_classes, self.num_inst)
+    #     for it in range(self.num_updates):
+    #         grads = []
+    #         for task in [task1, task2]:
+    #             # Make sure fast net always starts with base weights
+    #             self.fast_net.copy_weights(self.net)
+    #             _, g = self.fast_net.forward(task)
+    #             grads.append(g)
+    #         self.meta_update(task, grads)
             
     def train(self, exp):
         # For logging
@@ -153,7 +182,7 @@ class MetaLearner(object):
         mtr_loss, mtr_acc, mval_loss, mval_acc = [], [], [], []
         for it in range(self.num_updates):
             # Evaluate on test tasks
-            mt_loss, mt_acc, mv_loss, mv_acc = self.test()
+            mt_loss, mt_acc, mv_loss, mv_acc = self.test() #TODO
 
             writer.add_scalar('meta_train_loss', mt_loss, it)
             writer.add_scalar('meta_train_acc', mt_acc, it)
@@ -166,13 +195,16 @@ class MetaLearner(object):
             mval_acc.append(mv_acc)
             # Collect a meta batch update
             grads = []
+            gen_grads = []
             tloss, tacc, vloss, vacc = 0.0, 0.0, 0.0, 0.0
             for i in range(self.meta_batch_size):
                 task = self.get_task('../data/{}'.format(self.dataset), self.num_classes, self.num_inst)
                 self.fast_net.copy_weights(self.net)
-                metrics, g = self.fast_net.forward(task)
+                self.fast_gen.copy_weights(self.gen)
+                metrics, g, g_gen = self.fast_net.forward(task, self.fast_gen)
                 (trl, tra, vall, vala) = metrics
                 grads.append(g)
+                gen_grads.append(g_gen)
                 tloss += trl
                 tacc += tra
                 vloss += vall
@@ -180,11 +212,12 @@ class MetaLearner(object):
 
             # Perform the meta update
             print('Meta update', it)
-            self.meta_update(task, grads)
+            self.meta_update(task, grads, gen_grads) #TODO
 
             # Save a model snapshot every now and then
             if it % 500 == 0:
                 torch.save(self.net.state_dict(), '../output/{}/train_iter_{}.pth'.format(exp, it))
+                torch.save(self.gen.state_dict(), '../output/{}/gen_train_iter_{}.pth'.format(exp, it))
 
             # Save stuff
             tr_loss.append(tloss / self.meta_batch_size)

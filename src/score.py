@@ -12,18 +12,40 @@ def count_correct(pred, target):
     pairs = [int(x==y) for (x, y) in zip(pred, target)]
     return sum(pairs)
 
-def forward_pass(net, in_, target, weights=None):
+def forward_pass(net, in_, target, generator=None, net_weights=None, gen_weights=None):
     ''' forward in_ through the net, return loss and output '''
     # print(net)
-    print(in_.shape)
-    print(target.shape)
+    print(in_)
+    print(target)
 
-    input_var = Variable(in_).cuda(async=True)
+    real_input_var = Variable(in_).cuda(async=True)
     target_var = Variable(target).cuda(async=True)
 
-    out = net.net_forward(input_var, weights)
-    loss = net.loss_fn(out, target_var)
-    return loss, out
+    # Real Loss
+    out = net.net_forward(real_input_var, weights)
+    real_loss = net.loss_fn(out, target_var)
+
+    # Fake Loss
+    if generator is not None:
+        noise = Variable(FloatTensor(np.random.normal(0, 1, (in_.shape[0], generator.latent_dim))))
+        one_hot_targets = torch.nn.functional.one_hot(target_var, generator.num_classes)
+        fake_input_var = generator.forward(one_hot_targets, noise, gen_weights)
+        fake_target_var = Variable(torch.ones(target.shape) * generator.num_classes).cuda(async=True)
+
+        print("Hey inside generator loop and fake target var is")
+        print(fake_target_var)
+        fake_out = net.net_forward(fake_input_var, net_weights)
+        fake_loss = net.loss_fn(fake_out, fake_target_var)
+
+        net_loss = fake_loss + real_loss / 2.0
+
+        # Get generator loss
+        gen_loss = net.loss_fn(fake_out, target_var)
+
+        return net_loss, gen_loss, out, fake_out
+
+    else:
+        return real_loss, out
 
 def evaluate(net, loader, weights=None):
     ''' evaluate the net on the data in the loader '''
