@@ -48,9 +48,7 @@ class Omniglot(FewShotDataset):
         label = self.labels[idx]
         if self.target_transform is not None:
             label = self.target_transform(label)
-        print("ANd now in get item")
-        print(im.mean())
-        print(im.std())
+        im / 255.0
         return im, label
 
 class MNIST(data.Dataset):
