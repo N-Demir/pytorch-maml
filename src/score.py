@@ -32,7 +32,7 @@ def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights
         noise = Variable(torch.FloatTensor(np.random.normal(0, 1, (in_.shape[0], generator.latent_dim)))).cuda(async=True)
         # one_hot_targets = torch.nn.functional.one_hot(target_var, generator.num_classes)
         fake_input_var = generator.forward(noise, gen_weights)
-        # fake_target_var = Variable(torch.ones(target.shape, dtype=torch.int64) * generator.num_classes).cuda(async=True)
+        fake_target_var = Variable(torch.ones(target.shape, dtype=torch.int64) * generator.num_classes).cuda(async=True)
 
         fake_out = net.net_forward(fake_input_var, net_weights)
         fake_loss = net.loss_fn(fake_out, fake_target_var)
