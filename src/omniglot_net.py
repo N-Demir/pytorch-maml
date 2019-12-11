@@ -12,7 +12,7 @@ from layers import *
 class ConditionalGenerator(nn.Module):
     def __init__(self, num_classes, latent_dim, im_shape):
         super(ConditionalGenerator, self).__init__()
-        self.im_shape = im_shape
+        self.img_shape = im_shape
         self.latent_dim = latent_dim
         self.num_classes = num_classes
 
@@ -60,7 +60,7 @@ class ConditionalGenerator(nn.Module):
             out = leakyrelu(out, slope=0.2, inplace=True)
             out = nn.Tanh()(out)
 
-        out = out.view(out.size[0], *self.im_shape)
+        out = out.view(out.size[0], *self.img_shape)
         return out
 
     def net_forward(self, label, noise, weights=None):
