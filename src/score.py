@@ -17,8 +17,6 @@ def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights
     # print(net)
     # print(in_)
     # print(target)
-    print("hey")
-    print(in_)
 
     real_input_var = Variable(in_).cuda(async=True)
     target_var = Variable(target).cuda(async=True)
