@@ -20,6 +20,7 @@ from omniglot_net import OmniglotNet
 from score import *
 from data_loading import *
 from tensorboardX import SummaryWriter
+import datetime
 
 
 class MetaLearner(object):
@@ -146,7 +147,7 @@ class MetaLearner(object):
             
     def train(self, exp):
         # For logging
-        writer = SummaryWriter('../output/{}/'.format(exp))
+        writer = SummaryWriter('../output/{}/'.format(exp + "_" + str(datetime.datetime.now())))
 
         tr_loss, tr_acc, val_loss, val_acc = [], [], [], []
         mtr_loss, mtr_acc, mval_loss, mval_acc = [], [], [], []
