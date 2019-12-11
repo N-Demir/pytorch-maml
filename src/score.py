@@ -12,7 +12,7 @@ def count_correct(pred, target):
     pairs = [int(x==y) for (x, y) in zip(pred, target)]
     return sum(pairs)
 
-def forward_pass(net, in_, target, generator=None, net_weights=None, gen_weights=None):
+def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights=None):
     ''' forward in_ through the net, return loss and output '''
     # print(net)
     # print(in_)
@@ -32,8 +32,6 @@ def forward_pass(net, in_, target, generator=None, net_weights=None, gen_weights
         fake_input_var = generator.forward(one_hot_targets, noise, gen_weights)
         fake_target_var = Variable(torch.ones(target.shape, dtype=torch.int64) * generator.num_classes).cuda(async=True)
 
-        print("Hey inside generator loop and fake target var is")
-        print(fake_target_var)
         fake_out = net.net_forward(fake_input_var, net_weights)
         fake_loss = net.loss_fn(fake_out, fake_target_var)
 
