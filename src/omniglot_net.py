@@ -71,7 +71,7 @@ class ConditionalGenerator(nn.Module):
         torch.manual_seed(1337)
         torch.cuda.manual_seed(1337)
         torch.cuda.manual_seed_all(1337)
-        print('init weights')
+        print('generator init weights')
         for m in self.modules():
             if isinstance(m, nn.BatchNorm1d):
                 m.weight.data.fill_(1)
