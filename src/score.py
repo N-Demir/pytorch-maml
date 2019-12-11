@@ -12,7 +12,7 @@ def count_correct(pred, target):
     pairs = [int(x==y) for (x, y) in zip(pred, target)]
     return sum(pairs)
 
-def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights=None):
+def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights=None, outer_update=False):
     ''' forward in_ through the net, return loss and output '''
     # print(net)
     # print(in_)
@@ -23,7 +23,7 @@ def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights
 
     # Real Loss
     out = net.net_forward(real_input_var, net_weights)
-    real_loss = net.loss_fn(out, target_var)
+    real_loss = net.loss_fn(out, target_var) if not outer_update else net.loss_fn(out[:, :-1], target_var)
 
     # Fake Loss
     if generator is not None:
