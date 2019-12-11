@@ -19,7 +19,7 @@ class ConditionalGenerator(nn.Module):
         # Define the network following this architecture:
         # https://github.com/eriklindernoren/PyTorch-GAN/blob/master/implementations/cgan/cgan.py
         self.operations = nn.Sequential(OrderedDict([
-                ('linear1', nn.Linear(latent_dim + int(np.prod(self.img_shape)), 128)),
+                ('linear1', nn.Linear(latent_dim + 2, 128)),
                 ('leakyrelu1', nn.LeakyReLU(0.2, inplace=True)),
                 ('linear2', nn.Linear(128, 256)),
                 ('1dbn2', nn.BatchNorm1d(256, 0.8)),
