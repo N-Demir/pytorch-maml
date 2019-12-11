@@ -57,7 +57,7 @@ class InnerLoop(OmniglotNet):
             in_, target = train_loader.__iter__().next()
             if i==0:
                 #TODO: If we want to separate discriminator and generator updates do it here
-                net_loss, _ = forward_pass(self, in_, target, generator=generator)
+                net_loss, _ = forward_pass(self, in_, target)
                 net_grads = torch.autograd.grad(net_loss, self.parameters(), create_graph=True)
             if i >= 3:
                 net_loss, gen_loss, _, _ = forward_pass(self, in_, target, generator=generator, net_weights=fast_weights, gen_weights=gen_fast_weights)
