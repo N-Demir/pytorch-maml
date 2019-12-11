@@ -17,6 +17,8 @@ def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights
     # print(net)
     # print(in_)
     # print(target)
+    print("hey")
+    print(in_)
 
     real_input_var = Variable(in_).cuda(async=True)
     target_var = Variable(target).cuda(async=True)
@@ -28,9 +30,9 @@ def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights
     # Fake Loss
     if generator is not None:
         noise = Variable(torch.FloatTensor(np.random.normal(0, 1, (in_.shape[0], generator.latent_dim)))).cuda(async=True)
-        one_hot_targets = torch.nn.functional.one_hot(target_var, generator.num_classes)
-        fake_input_var = generator.forward(one_hot_targets, noise, gen_weights)
-        fake_target_var = Variable(torch.ones(target.shape, dtype=torch.int64) * generator.num_classes).cuda(async=True)
+        # one_hot_targets = torch.nn.functional.one_hot(target_var, generator.num_classes)
+        fake_input_var = generator.forward(noise, gen_weights)
+        # fake_target_var = Variable(torch.ones(target.shape, dtype=torch.int64) * generator.num_classes).cuda(async=True)
 
         fake_out = net.net_forward(fake_input_var, net_weights)
         fake_loss = net.loss_fn(fake_out, fake_target_var)
@@ -38,11 +40,7 @@ def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights
         net_loss = (fake_loss + real_loss) / 2.0
 
         # Get generator loss
-        # THIS IS AN UNUSUAL LOSS, mention it
         gen_loss = -net.loss_fn(fake_out, fake_target_var)
-        # TODO: Replace with predict any of the k
-        # TODO: Comment out fake_loss part for net_loss
-        # TODO: Learning rate issues
 
         return net_loss, gen_loss, out, fake_out
 
