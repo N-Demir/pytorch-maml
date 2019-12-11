@@ -49,6 +49,7 @@ class Omniglot(FewShotDataset):
         if self.target_transform is not None:
             label = self.target_transform(label)
         print("ANd now in get item")
+        print(im.mean())
         print(im)
         return im, label
 
