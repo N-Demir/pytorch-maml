@@ -19,18 +19,12 @@ class ConditionalGenerator(nn.Module):
         # Define the network following this architecture:
         # https://github.com/eriklindernoren/PyTorch-GAN/blob/master/implementations/cgan/cgan.py
         self.operations = nn.Sequential(OrderedDict([
-                ('linear1', nn.Linear(latent_dim, 128)),
+                ('linear1', nn.Linear(latent_dim + int(np.prod(self.img_shape)), 128)),
                 ('leakyrelu1', nn.LeakyReLU(0.2, inplace=True)),
                 ('linear2', nn.Linear(128, 256)),
                 ('1dbn2', nn.BatchNorm1d(256, 0.8)),
                 ('leakyrelu2', nn.LeakyReLU(0.2, inplace=True)),
-                ('linear3', nn.Linear(256, 512)),
-                ('1dbn3', nn.BatchNorm1d(512, 0.8)),
-                ('leakyrelu3', nn.LeakyReLU(0.2, inplace=True)),
-                ('linear4', nn.Linear(512, 1024)),
-                ('1dbn4', nn.BatchNorm1d(1024, 0.8)),
-                ('leakyrelu4', nn.LeakyReLU(0.2, inplace=True)),
-                ('linear5', nn.Linear(1024, int(np.prod(self.img_shape)))),
+                ('linear5', nn.Linear(256, int(np.prod(self.img_shape)))),
                 ('1dbn5', nn.BatchNorm1d(int(np.prod(self.img_shape)), 0.8)),
                 ('leakyrelu5', nn.LeakyReLU(0.2, inplace=True)),
                 # ('tanh', nn.Tanh()), # TODO: Should this be something else?
@@ -39,8 +33,8 @@ class ConditionalGenerator(nn.Module):
         # Initialize weights
         self._init_weights()
 
-    def forward(self, noise, weights=None):
-        # out = torch.cat((label.float(), noise), -1)
+    def forward(self, noise, inputs, weights=None):
+        out = torch.cat(inputs.view(inputs.shape[0], int(np.prod(self.img_shape)), noise), -1)
         if weights == None:
             out = self.operations(noise)
         else:
@@ -48,12 +42,6 @@ class ConditionalGenerator(nn.Module):
             out = leakyrelu(out, negative_slope=0.2, inplace=True)
             out = linear(out, weights['operations.linear2.weight'], weights['operations.linear2.bias'])
             out = batchnorm(out, weights['operations.1dbn2.weight'], weights['operations.1dbn2.bias'], momentum=0.8)
-            out = leakyrelu(out, negative_slope=0.2, inplace=True)
-            out = linear(out, weights['operations.linear3.weight'], weights['operations.linear3.bias'])
-            out = batchnorm(out, weights['operations.1dbn3.weight'], weights['operations.1dbn3.bias'], momentum=0.8)
-            out = leakyrelu(out, negative_slope=0.2, inplace=True)
-            out = linear(out, weights['operations.linear4.weight'], weights['operations.linear4.bias'])
-            out = batchnorm(out, weights['operations.1dbn4.weight'], weights['operations.1dbn4.bias'], momentum=0.8)
             out = leakyrelu(out, negative_slope=0.2, inplace=True)
             out = linear(out, weights['operations.linear5.weight'], weights['operations.linear5.bias'])
             out = batchnorm(out, weights['operations.1dbn5.weight'], weights['operations.1dbn5.bias'], momentum=0.8)
