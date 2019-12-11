@@ -40,7 +40,7 @@ class ConditionalGenerator(nn.Module):
         self._init_weights()
 
     def forward(self, label, noise, weights=None):
-        out = torch.cat((label.long(), noise), -1)
+        out = torch.cat((label.float(), noise), -1)
         if weights == None:
             out = self.operations(out)
         else:
@@ -129,8 +129,6 @@ class OmniglotNet(nn.Module):
         ''' Define what happens to data in the net '''
         if weights == None:
             x = self.features(x)
-            print("HeYyy")
-            print(type(x))
             x = x.view(x.size(0), 64)
             x = self.fc(x)
         else:
