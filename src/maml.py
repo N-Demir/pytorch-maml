@@ -56,9 +56,9 @@ class MetaLearner(object):
         self.fast_net = InnerLoop(num_classes, self.loss_fn, self.num_inner_updates, self.inner_step_size, self.inner_batch_size, self.meta_batch_size, num_input_channels)
         self.fast_net.cuda()
 
-        self.gen = ConditionalGenerator(num_classes, self.generator_noise_dim, (1, 28, 28))
+        self.gen = ConditionalGenerator(num_classes, self.generator_noise_dim, (3, 28, 28))
         self.gen.cuda()
-        self.fast_gen = ConditionalGenerator(num_classes, self.generator_noise_dim, (1, 28, 28))
+        self.fast_gen = ConditionalGenerator(num_classes, self.generator_noise_dim, (3, 28, 28))
         self.fast_gen.cuda()
 
         self.opt = Adam(self.net.parameters(), lr=meta_step_size)
