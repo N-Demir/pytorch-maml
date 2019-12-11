@@ -36,8 +36,6 @@ class Omniglot(FewShotDataset):
         im = Image.open('{}/{}'.format(self.root, idx)).convert('RGB')
         im = im.resize((28,28), resample=Image.LANCZOS) # per Chelsea's implementation
         im = np.array(im, dtype=np.float32)
-        print("Yo in here")
-        print(im)
         return im
     
     def __getitem__(self, idx):
