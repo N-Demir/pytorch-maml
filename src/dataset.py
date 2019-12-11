@@ -46,7 +46,7 @@ class Omniglot(FewShotDataset):
         label = self.labels[idx]
         if self.target_transform is not None:
             label = self.target_transform(label)
-        im / 255.0
+        im /= 255.0
         return im, label
 
 class MNIST(data.Dataset):
