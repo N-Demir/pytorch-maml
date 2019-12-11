@@ -36,6 +36,8 @@ class Omniglot(FewShotDataset):
         im = Image.open('{}/{}'.format(self.root, idx)).convert('RGB')
         im = im.resize((28,28), resample=Image.LANCZOS) # per Chelsea's implementation
         im = np.array(im, dtype=np.float32)
+        print("Yo in here")
+        print(im)
         return im
     
     def __getitem__(self, idx):
@@ -46,6 +48,8 @@ class Omniglot(FewShotDataset):
         label = self.labels[idx]
         if self.target_transform is not None:
             label = self.target_transform(label)
+        print("ANd now in get item")
+        print(im)
         return im, label
 
 class MNIST(data.Dataset):
