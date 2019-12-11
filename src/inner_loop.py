@@ -57,15 +57,18 @@ class InnerLoop(OmniglotNet):
             in_, target = train_loader.__iter__().next()
             if i==0:
                 #TODO: If we want to separate discriminator and generator updates do it here
-                net_loss, gen_loss, _, _ = forward_pass(self, in_, target, generator=generator)
+                net_loss, _ = forward_pass(self, in_, target, generator=generator)
                 net_grads = torch.autograd.grad(net_loss, self.parameters(), create_graph=True)
-                gen_grads = torch.autograd.grad(gen_loss, generator.parameters(), create_graph=True)
-            else:
+            if i >= 3:
                 net_loss, gen_loss, _, _ = forward_pass(self, in_, target, generator=generator, net_weights=fast_weights, gen_weights=gen_fast_weights)
                 net_grads = torch.autograd.grad(net_loss, fast_weights.values(), create_graph=True)
                 gen_grads = torch.autograd.grad(gen_loss, gen_fast_weights.values(), create_graph=True)
+                gen_fast_weights = OrderedDict((name, param - self.step_size*grad) for ((name, param), grad) in zip(gen_fast_weights.items(), gen_grads))
+            else:
+                net_loss, _ = forward_pass(self, in_, target, net_weights=fast_weights)
+                net_grads = torch.autograd.grad(net_loss, fast_weights.values(), create_graph=True)
             fast_weights = OrderedDict((name, param - self.step_size*grad) for ((name, param), grad) in zip(fast_weights.items(), net_grads))
-            gen_fast_weights = OrderedDict((name, param - self.step_size*grad) for ((name, param), grad) in zip(gen_fast_weights.items(), gen_grads))
+        
         ##### Test net after training, should be better than random ####
         tr_post_loss, tr_post_acc = evaluate(self, train_loader, fast_weights)
         val_post_loss, val_post_acc = evaluate(self, val_loader, fast_weights) 
