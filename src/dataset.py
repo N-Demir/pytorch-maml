@@ -50,7 +50,7 @@ class Omniglot(FewShotDataset):
             label = self.target_transform(label)
         print("ANd now in get item")
         print(im.mean())
-        print(im)
+        print(im.std())
         return im, label
 
 class MNIST(data.Dataset):
