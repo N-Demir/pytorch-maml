@@ -34,7 +34,7 @@ class ConditionalGenerator(nn.Module):
         self._init_weights()
 
     def forward(self, noise, inputs, weights=None):
-        out = torch.cat(inputs.view(inputs.shape[0], int(np.prod(self.img_shape)), noise), -1)
+        out = torch.cat((inputs.view(inputs.shape[0], int(np.prod(self.img_shape))), noise), -1)
         if weights == None:
             out = self.operations(noise)
         else:
