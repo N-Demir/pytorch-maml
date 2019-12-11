@@ -15,8 +15,8 @@ def count_correct(pred, target):
 def forward_pass(net, in_, target, generator=None, net_weights=None, gen_weights=None):
     ''' forward in_ through the net, return loss and output '''
     # print(net)
-    print(in_)
-    print(target)
+    # print(in_)
+    # print(target)
 
     real_input_var = Variable(in_).cuda(async=True)
     target_var = Variable(target).cuda(async=True)
@@ -27,7 +27,7 @@ def forward_pass(net, in_, target, generator=None, net_weights=None, gen_weights
 
     # Fake Loss
     if generator is not None:
-        noise = Variable(FloatTensor(np.random.normal(0, 1, (in_.shape[0], generator.latent_dim))))
+        noise = Variable(torch.FloatTensor(np.random.normal(0, 1, (in_.shape[0], generator.latent_dim)))).cuda(async=True)
         one_hot_targets = torch.nn.functional.one_hot(target_var, generator.num_classes)
         fake_input_var = generator.forward(one_hot_targets, noise, gen_weights)
         fake_target_var = Variable(torch.ones(target.shape) * generator.num_classes).cuda(async=True)
