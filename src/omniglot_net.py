@@ -10,7 +10,7 @@ from layers import *
 
 
 class ConditionalGenerator(nn.Module):
-    def __init__(self, num_classes, latent_dim, im_shape, loss_fn):
+    def __init__(self, num_classes, latent_dim, im_shape):
         super(OmniglotNet, self).__init__()
         self.im_shape = im_shape
         self.latent_dim = latent_dim
@@ -35,9 +35,6 @@ class ConditionalGenerator(nn.Module):
                 ('leakyrelu5', nn.LeakyReLU(0.2, inplace=True)),
                 ('tanh', nn.Tanh()), # TODO: Should this be something else?
         ]))
-        
-        # Define loss function
-        self.loss_fn = loss_fn
 
         # Initialize weights
         self._init_weights()
