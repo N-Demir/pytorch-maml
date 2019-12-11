@@ -82,7 +82,7 @@ class InnerLoop(OmniglotNet):
         net_grads = torch.autograd.grad(net_loss, self.parameters(), retain_graph=True)
         gen_grads = torch.autograd.grad(gen_loss, generator.parameters())
 
-        meta_grads = {name:g for ((name, _), g) in zip(self.named_parameters(), grads)}
+        meta_grads = {name:g for ((name, _), g) in zip(self.named_parameters(), net_grads)}
         gen_meta_grads = {name:g for ((name, _), g) in zip(generator.named_parameters(), gen_grads)}
         metrics = (tr_post_loss, tr_post_acc, val_post_loss, val_post_acc)
         return metrics, meta_grads, gen_meta_grads
