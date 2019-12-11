@@ -33,7 +33,7 @@ class ConditionalGenerator(nn.Module):
                 ('linear5', nn.Linear(1024, int(np.prod(self.img_shape)))),
                 ('1dbn5', nn.BatchNorm1d(int(np.prod(self.img_shape)), 0.8)),
                 ('leakyrelu5', nn.LeakyReLU(0.2, inplace=True)),
-                ('tanh', nn.Tanh()), # TODO: Should this be something else?
+                # ('tanh', nn.Tanh()), # TODO: Should this be something else?
         ]))
 
         # Initialize weights
@@ -58,9 +58,9 @@ class ConditionalGenerator(nn.Module):
             out = linear(out, weights['linear5.weight'], weights['linear5.bias'])
             out = batchnorm(out, weights['1dbn5.weight'], weights['1dbn5.bias'], momentum=0.8)
             out = leakyrelu(out, slope=0.2, inplace=True)
-            out = nn.Tanh()(out)
+            # out = nn.Tanh()(out)
 
-        out = out.view(out.size[0], *self.img_shape)
+        out = out.view(out.shape[0], *self.img_shape)
         return out
 
     def net_forward(self, label, noise, weights=None):
