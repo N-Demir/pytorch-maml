@@ -40,7 +40,7 @@ class ConditionalGenerator(nn.Module):
         self._init_weights()
 
     def forward(self, label, noise, weights=None):
-        out = torch.cat((label, noise), -1)
+        out = torch.cat((label.float(), noise), -1)
         if weights == None:
             out = self.operations(out)
         else:
