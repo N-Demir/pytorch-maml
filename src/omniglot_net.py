@@ -19,7 +19,7 @@ class ConditionalGenerator(nn.Module):
         # Define the network following this architecture:
         # https://github.com/eriklindernoren/PyTorch-GAN/blob/master/implementations/cgan/cgan.py
         self.operations = nn.Sequential(OrderedDict([
-                ('linear1', nn.Linear(latent_dim + 2, 128)),
+                ('linear1', nn.Linear(latent_dim + int(np.prod(self.img_shape)), 128)),
                 ('leakyrelu1', nn.LeakyReLU(0.2, inplace=True)),
                 ('linear2', nn.Linear(128, 256)),
                 ('1dbn2', nn.BatchNorm1d(256, 0.8)),
@@ -35,12 +35,10 @@ class ConditionalGenerator(nn.Module):
 
     def forward(self, noise, inputs, weights=None):
         out = torch.cat((inputs.view(inputs.shape[0], int(np.prod(self.img_shape))), noise), -1)
-        print("hey")
-        print(out.shape)
         if weights == None:
-            out = self.operations(noise)
+            out = self.operations(out)
         else:
-            out = linear(noise, weights['operations.linear1.weight'], weights['operations.linear1.bias'])
+            out = linear(out, weights['operations.linear1.weight'], weights['operations.linear1.bias'])
             out = leakyrelu(out, negative_slope=0.2, inplace=True)
             out = linear(out, weights['operations.linear2.weight'], weights['operations.linear2.bias'])
             out = batchnorm(out, weights['operations.1dbn2.weight'], weights['operations.1dbn2.bias'], momentum=0.8)
