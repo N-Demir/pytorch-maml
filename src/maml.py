@@ -231,9 +231,9 @@ class MetaLearner(object):
                     plt.subplot(5, 1, 1 + i)
                     plt.axis('off')
                     plt.imshow(img, cmap='Greys')
-                    plt.savefig("../output/{}/im_{}.png".format(exp, it))
-                    plt.close()
-                    print("Saved figures to {}".format(exp))
+                plt.savefig("../output/{}/im_{}.png".format(exp, it))
+                plt.close()
+                print("Saved figures to {}".format(exp))
 
             # Save stuff
             tr_loss.append(tloss / self.meta_batch_size)

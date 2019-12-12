@@ -23,7 +23,8 @@ def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights
 
     # Real Loss
     out = net.net_forward(real_input_var, net_weights)
-    real_loss = net.loss_fn(out, target_var) if not outer_update else net.loss_fn(out[:, :-1], target_var)
+    # real_loss = net.loss_fn(out, target_var) if not outer_update else net.loss_fn(out[:, :-1], target_var)
+    real_loss = net.loss_fn(out, target_var)
 
     # Fake Loss
     if generator is not None:
@@ -38,8 +39,10 @@ def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights
         net_loss = (fake_loss + real_loss*generator.num_classes) / (generator.num_classes+1)
 
         # Get generator loss
-        gen_loss = -net.loss_fn(fake_out, fake_target_var)
+        gen_loss = (-fake_loss + real_loss*generator.num_classes) / (generator.num_classes+1)
 
+        # if outer_update:
+        #     return real_loss, gen_loss, out, fake_input_var
         return net_loss, gen_loss, out, fake_input_var
 
     else:
