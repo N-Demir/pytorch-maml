@@ -227,7 +227,7 @@ class MetaLearner(object):
                     b = b.swapaxes(0,1).swapaxes(1,2)
                     b = (b-np.min(b))
                     img = b/np.max(b)   
-                    plt.subplot(5, 10, 1 + i)
+                    plt.subplot(5, 1, 1 + i)
                     plt.axis('off')
                     plt.imshow(img, cmap='Greys')
                     plt.savefig("../output/{}/im_{}.png".format(exp, it))
