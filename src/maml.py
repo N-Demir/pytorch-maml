@@ -227,10 +227,10 @@ class MetaLearner(object):
                     b = (b-np.min(b))
                     img = b/np.max(b)
                     i = 0
-                        if i < 50:
-                            plt.subplot(5, 10, 1 + i)
-                            plt.axis('off')
-                            plt.imshow(img, cmap='Greys')
+                    if i < 50:
+                        plt.subplot(5, 10, 1 + i)
+                        plt.axis('off')
+                        plt.imshow(img, cmap='Greys')
                         i += 1
                     plt.savefig("../output/{}/im_{}.png".format(exp, it))
                     plt.close()
