@@ -220,20 +220,21 @@ class MetaLearner(object):
                 torch.save(self.net.state_dict(), '../output/{}/train_iter_{}.pth'.format(exp, it))
                 torch.save(self.gen.state_dict(), '../output/{}/gen_train_iter_{}.pth'.format(exp, it))
             if it % 1 == 0:
+                print("hey")
+                print(fake_out.shape)
                 fake_out = fake_out.cpu().detach().numpy()
-                for b in fake_out:
+                for i in range(len(fake_out))
+                    b = fake_out[i]
                     b = b.reshape(3,28,28)
                     b = b.swapaxes(0,1).swapaxes(1,2)
                     b = (b-np.min(b))
-                    img = b/np.max(b)
-                    i = 0
-                    if i < 50:
-                        plt.subplot(5, 10, 1 + i)
-                        plt.axis('off')
-                        plt.imshow(img, cmap='Greys')
-                        i += 1
+                    img = b/np.max(b)   
+                    plt.subplot(5, 10, 1 + i)
+                    plt.axis('off')
+                    plt.imshow(img, cmap='Greys')
                     plt.savefig("../output/{}/im_{}.png".format(exp, it))
                     plt.close()
+                    print("Saved figures to {}".format(exp))
 
             # Save stuff
             tr_loss.append(tloss / self.meta_batch_size)
