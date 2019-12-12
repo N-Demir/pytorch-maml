@@ -222,6 +222,8 @@ class MetaLearner(object):
                 torch.save(self.gen.state_dict(), '../output/{}/gen_train_iter_{}.pth'.format(exp, it))
             if it % 1 == 0:
                 fake_out = fake_out.cpu().detach().numpy()
+                print("heyo ")
+                print(fake_out.shape)
                 for i in range(len(fake_out)):
                     b = fake_out[i]
                     b = b.reshape(3,28,28)
