@@ -21,6 +21,7 @@ from score import *
 from data_loading import *
 from tensorboardX import SummaryWriter
 import datetime
+import matplotlib.pyplot as plt
 
 
 class MetaLearner(object):
