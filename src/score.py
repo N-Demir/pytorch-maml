@@ -40,6 +40,8 @@ def forward_pass(net, in_, target, net_weights=None, generator=None, gen_weights
         # Get generator loss
         gen_loss = -net.loss_fn(fake_out, fake_target_var)
 
+        print("Shape of fake out")
+        print(fake_out)
         return net_loss, gen_loss, out, fake_out
 
     else:

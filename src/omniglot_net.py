@@ -15,8 +15,6 @@ class ConditionalGenerator(nn.Module):
         self.img_shape = im_shape
         self.latent_dim = latent_dim
         self.num_classes = num_classes
-        print("IMage shape is")
-        print(self.img_shape)
 
         # Define the network following this architecture:
         # https://github.com/eriklindernoren/PyTorch-GAN/blob/master/implementations/cgan/cgan.py
@@ -53,8 +51,6 @@ class ConditionalGenerator(nn.Module):
 
         out = out.view(out.shape[0], *self.img_shape)
 
-        print("Shape of out")
-        print(out.shape)
         return out
 
     def net_forward(self, noise, weights=None):
