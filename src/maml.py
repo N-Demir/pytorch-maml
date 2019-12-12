@@ -176,7 +176,8 @@ class MetaLearner(object):
             
     def train(self, exp):
         # For logging
-        writer = SummaryWriter('../output/{}/'.format(exp + "_" + str(datetime.datetime.now())))
+        exp = exp + "_" + str(datetime.datetime.now())
+        writer = SummaryWriter('../output/{}/'.format(exp))
 
         tr_loss, tr_acc, val_loss, val_acc = [], [], [], []
         mtr_loss, mtr_acc, mval_loss, mval_acc = [], [], [], []
@@ -201,7 +202,7 @@ class MetaLearner(object):
                 task = self.get_task('../data/{}'.format(self.dataset), self.num_classes, self.num_inst)
                 self.fast_net.copy_weights(self.net)
                 self.fast_gen.copy_weights(self.gen)
-                metrics, g, g_gen = self.fast_net.forward(task, self.fast_gen)
+                metrics, g, g_gen, fake_out = self.fast_net.forward(task, self.fast_gen)
                 (trl, tra, vall, vala) = metrics
                 grads.append(g)
                 gen_grads.append(g_gen)
@@ -218,6 +219,20 @@ class MetaLearner(object):
             if it % 500 == 0:
                 torch.save(self.net.state_dict(), '../output/{}/train_iter_{}.pth'.format(exp, it))
                 torch.save(self.gen.state_dict(), '../output/{}/gen_train_iter_{}.pth'.format(exp, it))
+            if it % 1 == 0:
+                fake_out = fake_out.cpu().detach().numpy()
+                for b in fake_out:
+                    b = b.reshape(3,28,28)
+                    b = b.swapaxes(0,1).swapaxes(1,2)
+                    b = (b-np.min(b))
+                    img = b/np.max(b)
+                            if i < 50:
+                                plt.subplot(5, 10, 1 + i)
+                                plt.axis('off')
+                                plt.imshow(img, cmap='Greys')
+                            i += 1
+                        plt.savefig("../output/{}/im_{}.png".format(exp, it))
+                        plt.close()
 
             # Save stuff
             tr_loss.append(tloss / self.meta_batch_size)

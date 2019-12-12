@@ -60,7 +60,7 @@ class InnerLoop(OmniglotNet):
                 net_loss, _ = forward_pass(self, in_, target)
                 net_grads = torch.autograd.grad(net_loss, self.parameters(), create_graph=True)
             if i >= 3:
-                net_loss, gen_loss, _, _ = forward_pass(self, in_, target, generator=generator, net_weights=fast_weights, gen_weights=gen_fast_weights)
+                net_loss, gen_loss, _, fake_out = forward_pass(self, in_, target, generator=generator, net_weights=fast_weights, gen_weights=gen_fast_weights)
                 net_grads = torch.autograd.grad(net_loss, fast_weights.values(), create_graph=True)
                 gen_grads = torch.autograd.grad(gen_loss, gen_fast_weights.values(), create_graph=True)
                 gen_fast_weights = OrderedDict((name, param - self.step_size*grad) for ((name, param), grad) in zip(gen_fast_weights.items(), gen_grads))
@@ -87,5 +87,5 @@ class InnerLoop(OmniglotNet):
         meta_grads = {name:g for ((name, _), g) in zip(self.named_parameters(), net_grads)}
         gen_meta_grads = {name:g for ((name, _), g) in zip(generator.named_parameters(), gen_grads)}
         metrics = (tr_post_loss, tr_post_acc, val_post_loss, val_post_acc)
-        return metrics, meta_grads, gen_meta_grads
+        return metrics, meta_grads, gen_meta_grads, fake_out
 
