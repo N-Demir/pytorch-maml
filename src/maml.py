@@ -223,7 +223,7 @@ class MetaLearner(object):
                 print("hey")
                 print(fake_out.shape)
                 fake_out = fake_out.cpu().detach().numpy()
-                for i in range(len(fake_out))
+                for i in range(len(fake_out)):
                     b = fake_out[i]
                     b = b.reshape(3,28,28)
                     b = b.swapaxes(0,1).swapaxes(1,2)
