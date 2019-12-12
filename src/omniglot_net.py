@@ -27,7 +27,6 @@ class ConditionalGenerator(nn.Module):
                 ('linear5', nn.Linear(256, int(np.prod(self.img_shape)))),
                 ('1dbn5', nn.BatchNorm1d(int(np.prod(self.img_shape)), 0.8)),
                 ('leakyrelu5', nn.LeakyReLU(0.2, inplace=True)),
-                ('sigmoid', nn.Sigmoid())
                 # ('tanh', nn.Tanh()), # TODO: Should this be something else?
         ]))
 
@@ -47,8 +46,9 @@ class ConditionalGenerator(nn.Module):
             out = linear(out, weights['operations.linear5.weight'], weights['operations.linear5.bias'])
             out = batchnorm(out, weights['operations.1dbn5.weight'], weights['operations.1dbn5.bias'], momentum=0.8)
             out = leakyrelu(out, negative_slope=0.2, inplace=True)
-            out = nn.Sigmoid()(out)
-
+        
+        out = out + inputs.view(inputs.shape[0], int(np.prod(self.img_shape)))
+        out = nn.Sigmoid()(out)
         out = out.view(out.shape[0], *self.img_shape)
 
         return out
