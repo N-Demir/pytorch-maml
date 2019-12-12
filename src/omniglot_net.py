@@ -52,6 +52,9 @@ class ConditionalGenerator(nn.Module):
             out = nn.Sigmoid()(out)
 
         out = out.view(out.shape[0], *self.img_shape)
+
+        print("Shape of out")
+        print(out.shape)
         return out
 
     def net_forward(self, noise, weights=None):
